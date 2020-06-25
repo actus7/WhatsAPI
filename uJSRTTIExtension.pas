@@ -83,7 +83,7 @@ implementation
 {$R *.dfm}
 
 uses
-  uSimpleTextViewer, uCEFv8Handler, uTestExtension, uCEFMiscFunctions, System.NetEncoding;
+  uCEFv8Handler, uTestExtension, uCEFMiscFunctions, System.NetEncoding;
 
 procedure GlobalCEFApp_OnWebKitInitialized;
 begin
