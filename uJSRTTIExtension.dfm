@@ -1,4 +1,4 @@
-object JSRTTIExtensionFrm: TJSRTTIExtensionFrm
+object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'JSRTTIExtension'
@@ -62,6 +62,15 @@ object JSRTTIExtensionFrm: TJSRTTIExtensionFrm
     Align = alRight
     ScrollBars = ssVertical
     TabOrder = 3
+  end
+  object Button1: TButton
+    Left = 89
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Button1'
+    TabOrder = 4
+    OnClick = Button1Click
   end
   object Chromium1: TChromium
     OnProcessMessageReceived = Chromium1ProcessMessageReceived

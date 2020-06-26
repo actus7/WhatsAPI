@@ -133,7 +133,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="uJSRTTIExtension.pas">
-            <Form>JSRTTIExtensionFrm</Form>
+            <Form>frmMain</Form>
         </DCCReference>
         <DCCReference Include="uTestExtension.pas"/>
         <BuildConfiguration Include="Release">
@@ -163,13 +163,13 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="JSExtension.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="bin\WhatsAPI.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>WhatsAPI.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="JSExtension.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

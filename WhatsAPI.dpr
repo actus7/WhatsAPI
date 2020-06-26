@@ -40,14 +40,14 @@ program WhatsAPI;
 {$I cef.inc}
 
 uses
-{$IFDEF DELPHI16_UP}
+  {$IFDEF DELPHI16_UP}
   Vcl.Forms,
-{$ELSE}
+  {$ELSE}
   Forms,
   Windows,
-{$ENDIF }
+  {$ENDIF }
   uCEFApplication,
-  uJSRTTIExtension in 'uJSRTTIExtension.pas' {JSRTTIExtensionFrm} ,
+  uJSRTTIExtension in 'uJSRTTIExtension.pas' {frmMain},
   uTestExtension in 'uTestExtension.pas';
 
 {$R *.res}
@@ -61,8 +61,8 @@ begin
 {$IFDEF DELPHI11_UP}
     Application.MainFormOnTaskbar := True;
 {$ENDIF}
-    Application.CreateForm(TJSRTTIExtensionFrm, JSRTTIExtensionFrm);
-    Application.Run;
+    Application.CreateForm(TfrmMain, frmMain);
+  Application.Run;
   end;
 
   DestroyGlobalCEFApp;

@@ -1,90 +1,4 @@
-﻿//Version_JS;Version_TInjectMin;Version_CEF4Min
-//1.0.0.8;1.0.0.9;78.3.0
-//
-//
-//Fonte: https://gist.github.com/phpRajat/a6422922efae32914f4dbd1082f3f412
-
-var contactID;
-
-function getAllGroupContacts(Contacts) {
-	SetConsoleMessage("GetAllGroupContacts", JSON.stringify(Contacts));	
-}
-
-function getMyNumber() {
-    SetConsoleMessage('getMyNumber', localStorage.getItem('last-wid'));
-    return true;
-}
-
-function convertImgToBase64URL(url, callback, outputFormat){
-	var img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = function(){
-        var canvas = document.createElement('CANVAS'),
-        ctx = canvas.getContext('2d'), dataURL;
-        canvas.height = img.height;
-        canvas.width = img.width;
-        ctx.drawImage(img, 0, 0);
-        dataURL = canvas.toDataURL(outputFormat);
-        callback(dataURL);
-        canvas = null; 
-    };
-    img.src = url;
-};
-
-function SetConsoleMessage(jsName, resultValue) {
-    Obj = {
-        name: jsName,
-        result: '{"result":' + resultValue + '}'
-    }
-    console.log(JSON.stringify(Obj));
-}
-
-var intervalMonitor;
-var isLoggedStatus = false;
-
-function startMonitor(intervalSeconds = 0) {
-    isLoggedStatus = WAPI.isLoggedIn();
-    if (intervalSeconds >= 1) {
-        intervalMonitor = window.setInterval(monitorUnReadMessages, intervalSeconds * 1000);
-    }
-}
-
-function stopMonitor() {
-    window.clearInterval(intervalMonitor)
-}
-
-function removeElementsByClass(elementClass) {
-    var elements = document.getElementsByClassName(elementClass);
-    if (typeof elements !== 'undefined' && elements.length > 0) {
-        for (var i = 0; i < elements.length; i++) {
-            elements[i].parentNode.removeChild(elements[i]);
-        }
-    }
-}
-
-function moveElementsToParentParentElement(elementClass) {
-    var elements = document.getElementsByClassName(elementClass);
-    if (typeof elements !== 'undefined' && elements.length > 0) {
-        for (var i = 0; i < elements.length; i++) {
-            var element = elements[i];
-            element.parentNode.parentNode.appendChild(element);
-        }
-    }
-}
-
-function monitorUnReadMessages() {
-    var currentStatus = WAPI.isLoggedIn();
-    if (currentStatus != isLoggedStatus) {
-        isLoggedStatus = WAPI.isLoggedIn();
-        SetConsoleMessage("OnChangeConnect", JSON.stringify(isLoggedStatus));
-    }
-
-    if (isLoggedStatus) {
-        WAPI.getUnreadMessages(includeMe = "true", includeNotifications = "true", use_unread_count = "true");
-    }
-}
-
-if (!window.Store) {
+﻿if (!window.Store) {
     (function () {
         function getStore(modules) {
             let foundCount = 0;
@@ -344,7 +258,7 @@ window.WAPI.getAllContacts = function(done) {
 
     if (done !== undefined) done(contacts);
 
-    SetConsoleMessage("getAllContacts", JSON.stringify(contacts));
+    //SetConsoleMessage("getAllContacts", JSON.stringify(contacts));
 
     return contacts;
 };
@@ -386,7 +300,7 @@ window.WAPI.getAllChats = function(done) {
 
     if (done !== undefined) done(chats);
 
-    SetConsoleMessage("getAllChats", JSON.stringify(chats));
+    //SetConsoleMessage("getAllChats", JSON.stringify(chats));
 
     return chats;
 };
@@ -440,7 +354,7 @@ window.WAPI.getAllGroups = function(done) {
 		arrGroups.push(arr[i]['id']['_serialized']+' '+arr[i]['formattedTitle']);
 	})
 	
-	SetConsoleMessage("getAllGroups", JSON.stringify(arrGroups));
+	//SetConsoleMessage("getAllGroups", JSON.stringify(arrGroups));
 	
 	//return groups;
 	return JSON.stringify(arrGroups)
@@ -452,7 +366,7 @@ window.WAPI.getAllGroupsList = function(done) {
 
     if (done !== undefined) done(contacts);
 
-    SetConsoleMessage("getAllGroups", JSON.stringify(contacts));
+    //SetConsoleMessage("getAllGroups", JSON.stringify(contacts));
 
     return contacts;
 };
@@ -810,7 +724,7 @@ window.WAPI.getGroupAdmins = async function(id, done) {
 	arr.forEach((v , i) => {
 		arrGroupAdm.push(arr[i]['_serialized']);
 	})
-	SetConsoleMessage("getAllGroupAdmins", JSON.stringify(arrGroupAdm));
+	//SetConsoleMessage("getAllGroupAdmins", JSON.stringify(arrGroupAdm));
 	
     return output;
 };
@@ -840,14 +754,8 @@ window.WAPI.isConnected = function (done) {
     const isConnected = document.querySelector('*[data-icon="alert-phone"]') !== null ? false : true;
 
     if (done !== undefined) done(isConnected);
-	SetConsoleMessage("GetCheckIsConnected", JSON.stringify(isConnected));
+	//SetConsoleMessage("GetCheckIsConnected", JSON.stringify(isConnected));
     return isConnected;
-};
-
-window.WAPI.teste = function (url) {
-	convertImgToBase64URL(url, function(base64Img){
-		SetConsoleMessage("GetProfilePicThumb", JSON.stringify(base64Img));
-	});
 };
 
 window.WAPI.processMessageObj = function(messageObj, includeMe, includeNotifications) {
@@ -862,7 +770,7 @@ window.WAPI.processMessageObj = function(messageObj, includeMe, includeNotificat
         return WAPI._serializeMessageObj(messageObj);
     }
 
-    SetConsoleMessage("processMessageObj", JSON.stringify(messageObj));
+    //SetConsoleMessage("processMessageObj", JSON.stringify(messageObj));
     return;
 };
 
@@ -1203,7 +1111,7 @@ window.WAPI.getUnreadMessages = function(includeMe, includeNotifications, use_un
 
     }
 	contactID = chats.id;
-    SetConsoleMessage("getUnreadMessages", JSON.stringify(output));
+    //SetConsoleMessage("getUnreadMessages", JSON.stringify(output));
     return output;
 };
 
@@ -1213,7 +1121,7 @@ window.WAPI.getGroupOwnerID = async function(id, done) {
         done(output);
     }
 
-    SetConsoleMessage("getGroupOwnerID", JSON.stringify(output));
+    //SetConsoleMessage("getGroupOwnerID", JSON.stringify(output));
 
     return output;
 
@@ -1324,13 +1232,13 @@ window.WAPI.getBatteryLevel = function(done) {
             done(100);
         }
         output = 100;
-        return SetConsoleMessage("getBatteryLevel", JSON.stringify(output));
+        //return SetConsoleMessage("getBatteryLevel", JSON.stringify(output));
     }
     output = window.Store.Conn.battery;
     if (done !== undefined) {
         done(output);
     }
-    SetConsoleMessage("getBatteryLevel", JSON.stringify(output));
+    //SetConsoleMessage("getBatteryLevel", JSON.stringify(output));
     return output;
 };
 
@@ -1405,7 +1313,7 @@ window.WAPI._newMessagesBuffer = (sessionStorage.getItem('saved_msgs') != null) 
 window.WAPI._newMessagesDebouncer = null;
 window.WAPI._newMessagesCallbacks = [];
 
-if (isLoggedStatus) {
+if (WAPI.isLoggedIn()) {
 	window.Store.Msg.off('add');
 	sessionStorage.removeItem('saved_msgs');
 

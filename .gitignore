@@ -39,3 +39,4 @@ __recovery/
 
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
+/bin/debug.log

@@ -24,7 +24,7 @@ const
 type
   TStatusWhatsType = (Desconectado, Conectado);
 
-  TJSRTTIExtensionFrm = class(TForm)
+  TfrmMain = class(TForm)
     StatusBar1: TStatusBar;
     CEFWindowParent1: TCEFWindowParent;
     Chromium1: TChromium;
@@ -32,6 +32,7 @@ type
     btnReload: TButton;
     mmoDebug: TMemo;
     imgQrCode: TImage;
+    Button1: TButton;
     procedure FormShow(Sender: TObject);
     procedure Chromium1BeforeContextMenu(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; const params: ICefContextMenuParams; const model: ICefMenuModel);
     procedure Chromium1ContextMenuCommand(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; const params: ICefContextMenuParams; commandId: Integer;
@@ -50,16 +51,20 @@ type
     procedure Chromium1LoadStart(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; transitionType: Cardinal);
     procedure Chromium1LoadEnd(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; httpStatusCode: Integer);
     procedure btnReloadClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
+    procedure JSFuncoesBase;
     procedure LoadQrCode(const pQrCode: String);
     procedure JSBuscaQrCode;
     procedure JSConfirmaLogin;
   protected
     FStatusWhats: TStatusWhatsType;
-    FQrCodeBase64: string;
+    FRetorno: string;
     // Variables to control when can we destroy the form safely
     FCanClose: Boolean; // Set to True in TChromium.OnBeforeClose
     FClosing: Boolean; // Set to True in the CloseQuery event.
+
+    FMemo: String;
 
     procedure BrowserCreatedMsg(var aMessage: TMessage); message CEF_AFTERCREATED;
     procedure BrowserDestroyMsg(var aMessage: TMessage); message CEF_DESTROY;
@@ -74,7 +79,7 @@ type
   end;
 
 var
-  JSRTTIExtensionFrm: TJSRTTIExtensionFrm;
+  frmMain: TfrmMain;
 
 procedure CreateGlobalCEFApp;
 
@@ -107,7 +112,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TJSRTTIExtensionFrm.CarregaApi;
+procedure TfrmMain.CarregaApi;
 var
   lScriptJS: TStringList;
 begin
@@ -115,7 +120,8 @@ begin
   try
     if FileExists(ExtractFilePath(ParamStr(0)) + 'js.abr') then
     begin
-      lScriptJS.LoadFromFile(ExtractFilePath(ParamStr(0)) + 'js.abr');
+      // lScriptJS.LoadFromFile(ExtractFilePath(ParamStr(0)) + 'js.abr');
+      lScriptJS.LoadFromFile(ExtractFilePath(ParamStr(0)) + 'wapi_plus.js');
       Chromium1.browser.MainFrame.ExecuteJavaScript(lScriptJS.Text, 'about:blank', 0);
     end
     else
@@ -127,12 +133,12 @@ begin
   end;
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1AfterCreated(Sender: TObject; const browser: ICefBrowser);
+procedure TfrmMain.Chromium1AfterCreated(Sender: TObject; const browser: ICefBrowser);
 begin
   PostMessage(Handle, CEF_AFTERCREATED, 0, 0);
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1BeforeContextMenu(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; const params: ICefContextMenuParams;
+procedure TfrmMain.Chromium1BeforeContextMenu(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; const params: ICefContextMenuParams;
   const model: ICefMenuModel);
 begin
   // Adding some custom context menu entries
@@ -140,7 +146,7 @@ begin
   model.AddItem(MINIBROWSER_CONTEXTMENU_SHOWDEVTOOLS, 'Show DevTools');
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1BeforePopup(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; const targetUrl, targetFrameName: ustring;
+procedure TfrmMain.Chromium1BeforePopup(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; const targetUrl, targetFrameName: ustring;
   targetDisposition: TCefWindowOpenDisposition; userGesture: Boolean; const popupFeatures: TCefPopupFeatures; var windowInfo: TCefWindowInfo; var client: ICefClient;
   var settings: TCefBrowserSettings; var extra_info: ICefDictionaryValue; var noJavascriptAccess: Boolean; var Result: Boolean);
 begin
@@ -148,7 +154,7 @@ begin
   Result := (targetDisposition in [WOD_NEW_FOREGROUND_TAB, WOD_NEW_BACKGROUND_TAB, WOD_NEW_POPUP, WOD_NEW_WINDOW]);
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1ContextMenuCommand(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; const params: ICefContextMenuParams;
+procedure TfrmMain.Chromium1ContextMenuCommand(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; const params: ICefContextMenuParams;
   commandId: Integer; eventFlags: Cardinal; out Result: Boolean);
 const
   ELEMENT_ID = 'keywords'; // ID attribute in the search box at https://www.briskbard.com/forum/
@@ -169,12 +175,11 @@ begin
   end;
 end;
 
-procedure TJSRTTIExtensionFrm.JSBuscaQrCode;
+procedure TfrmMain.JSFuncoesBase;
 var
   JS: String;
 begin
-  // Espera o QRCode ser apresentado na tela
-  JS := JS + 'function cmdAsyncQr() { ';
+  JS := JS + 'function cmdAsync() { ';
   JS := JS + '    return new Promise(resolve => { ';
   JS := JS + '        requestAnimationFrame(resolve); ';
   JS := JS + '    }); ';
@@ -182,12 +187,24 @@ begin
 
   JS := JS + 'function checkElement(selector) { ';
   JS := JS + '    if (document.querySelector(selector) === null) {  ';
-  JS := JS + '        return cmdAsyncQr().then(() => checkElement(selector)); ';
+  JS := JS + '        return cmdAsync().then(() => checkElement(selector)); ';
   JS := JS + '    } else { ';
   JS := JS + '        return Promise.resolve(true); ';
   JS := JS + '    }  ';
   JS := JS + '} ';
 
+  Chromium1.browser.MainFrame.ExecuteJavaScript(JS, 'about:blank', 0);
+end;
+
+procedure TfrmMain.Chromium1LoadStart(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; transitionType: Cardinal);
+begin
+  JSFuncoesBase;
+end;
+
+procedure TfrmMain.JSBuscaQrCode;
+var
+  JS: String;
+begin
   // Observa Mutações no QrCode
   JS := JS + 'var contQR = 0; ';
   JS := JS + 'var observer = new MutationObserver(function(mutations) { ';
@@ -213,7 +230,7 @@ begin
   Chromium1.browser.MainFrame.ExecuteJavaScript(JS, 'about:blank', 0);
 end;
 
-procedure TJSRTTIExtensionFrm.JSConfirmaLogin;
+procedure TfrmMain.JSConfirmaLogin;
 var
   JS: String;
 begin
@@ -221,30 +238,41 @@ begin
   JS := JS + 'var elemento = "#pane-side";';
   JS := JS + 'checkElement(elemento).then((element) => { ';
   JS := JS + '  console.log("Logado com Sucesso."); ';
-  JS := JS + '  var canvas = document.getElementsByTagName("canvas")[0];';
   JS := JS + '  myextension.whatsfunction("whatsconectado", "true");';
   JS := JS + '}); ';
   Chromium1.browser.MainFrame.ExecuteJavaScript(JS, 'about:blank', 0);
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1LoadEnd(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; httpStatusCode: Integer);
+procedure TfrmMain.Chromium1LoadEnd(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; httpStatusCode: Integer);
 begin
   JSBuscaQrCode;
   JSConfirmaLogin;
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1LoadStart(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; transitionType: Cardinal);
+procedure TfrmMain.Button1Click(Sender: TObject);
+var
+  JS: String;
 begin
-  // JSBuscaQrCode;
+  // Verifica se está logado
+  JS := JS + 'console.log(window.WAPI.getAllContacts()); ';
+  JS := JS + 'myextension.whatsfunction("getAllContacts", window.WAPI.getAllContacts());';
+  Chromium1.browser.MainFrame.ExecuteJavaScript(JS, 'about:blank', 0);
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1ProcessMessageReceived(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; sourceProcess: TCefProcessId;
+procedure TfrmMain.Chromium1ProcessMessageReceived(Sender: TObject; const browser: ICefBrowser; const frame: ICefFrame; sourceProcess: TCefProcessId;
   const message: ICefProcessMessage; out Result: Boolean);
 begin
   Result := False;
 
   if (message = nil) or (message.ArgumentList = nil) then
     exit;
+
+  if (message.Name = 'getQrCode') then
+  begin
+    FStatusWhats := Desconectado;
+    LoadQrCode(message.ArgumentList.GetString(0));
+    Result := True;
+  end;
 
   if (message.Name = 'whatsconectado') then
   begin
@@ -257,16 +285,17 @@ begin
     Result := True;
   end;
 
-  if (message.Name = 'getQrCode') then
+  if (message.Name = 'getAllContacts') then
   begin
     FStatusWhats := Desconectado;
-    FQrCodeBase64 := message.ArgumentList.GetString(0);
+    FRetorno := message.ArgumentList.GetString(0);
     PostMessage(Handle, MINIBROWSER_DEBUGMESSAGE, 0, 0);
     Result := True;
   end;
+
 end;
 
-procedure TJSRTTIExtensionFrm.LoadQrCode(const pQrCode: String);
+procedure TfrmMain.LoadQrCode(const pQrCode: String);
 var
   SLQrCodeBase64: TStringList;
   MSQrCodeBase64: TMemoryStream;
@@ -320,14 +349,13 @@ begin
   end;
 end;
 
-procedure TJSRTTIExtensionFrm.DebugMsg(var aMessage: TMessage);
+procedure TfrmMain.DebugMsg(var aMessage: TMessage);
 begin
   mmoDebug.Lines.Clear;
-  mmoDebug.Lines.Add(FQrCodeBase64);
-  LoadQrCode(FQrCodeBase64);
+  mmoDebug.Lines.Add(FRetorno);
 end;
 
-procedure TJSRTTIExtensionFrm.FormShow(Sender: TObject);
+procedure TfrmMain.FormShow(Sender: TObject);
 begin
   StatusBar1.Panels[0].Text := 'Initializing browser. Please wait...';
 
@@ -339,7 +367,7 @@ begin
     Timer1.Enabled := True;
 end;
 
-procedure TJSRTTIExtensionFrm.WMMove(var aMessage: TWMMove);
+procedure TfrmMain.WMMove(var aMessage: TWMMove);
 begin
   inherited;
 
@@ -347,7 +375,7 @@ begin
     Chromium1.NotifyMoveOrResizeStarted;
 end;
 
-procedure TJSRTTIExtensionFrm.WMMoving(var aMessage: TMessage);
+procedure TfrmMain.WMMoving(var aMessage: TMessage);
 begin
   inherited;
 
@@ -355,32 +383,32 @@ begin
     Chromium1.NotifyMoveOrResizeStarted;
 end;
 
-procedure TJSRTTIExtensionFrm.Timer1Timer(Sender: TObject);
+procedure TfrmMain.Timer1Timer(Sender: TObject);
 begin
   Timer1.Enabled := False;
   if not(Chromium1.CreateBrowser(CEFWindowParent1, '')) and not(Chromium1.Initialized) then
     Timer1.Enabled := True;
 end;
 
-procedure TJSRTTIExtensionFrm.BrowserCreatedMsg(var aMessage: TMessage);
+procedure TfrmMain.BrowserCreatedMsg(var aMessage: TMessage);
 begin
   StatusBar1.Panels[0].Text := '';
   CEFWindowParent1.UpdateSize;
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1BeforeClose(Sender: TObject; const browser: ICefBrowser);
+procedure TfrmMain.Chromium1BeforeClose(Sender: TObject; const browser: ICefBrowser);
 begin
   FCanClose := True;
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
-procedure TJSRTTIExtensionFrm.Chromium1Close(Sender: TObject; const browser: ICefBrowser; var aAction: TCefCloseBrowserAction);
+procedure TfrmMain.Chromium1Close(Sender: TObject; const browser: ICefBrowser; var aAction: TCefCloseBrowserAction);
 begin
   PostMessage(Handle, CEF_DESTROY, 0, 0);
   aAction := cbaDelay;
 end;
 
-procedure TJSRTTIExtensionFrm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := FCanClose;
 
@@ -392,18 +420,18 @@ begin
   end;
 end;
 
-procedure TJSRTTIExtensionFrm.FormCreate(Sender: TObject);
+procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   FCanClose := False;
   FClosing := False;
 end;
 
-procedure TJSRTTIExtensionFrm.BrowserDestroyMsg(var aMessage: TMessage);
+procedure TfrmMain.BrowserDestroyMsg(var aMessage: TMessage);
 begin
   CEFWindowParent1.Free;
 end;
 
-procedure TJSRTTIExtensionFrm.btnReloadClick(Sender: TObject);
+procedure TfrmMain.btnReloadClick(Sender: TObject);
 begin
   Chromium1.Reload;
 end;

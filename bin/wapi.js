@@ -1,11 +1,3 @@
-/**
- * This script contains WAPI functions that need to be run in the context of the webpage
- */
-
-/**
- * Auto discovery the webpack object references of instances that contains all functions used by the WAPI
- * functions and creates the Store object.
- */
 if (!window.Store) {
     (function () {
         function getStore(modules) {
@@ -1141,46 +1133,47 @@ window.WAPI._newMessagesBuffer    = (sessionStorage.getItem('saved_msgs') != nul
 window.WAPI._newMessagesDebouncer = null;
 window.WAPI._newMessagesCallbacks = [];
 
-window.Store.Msg.off('add');
-sessionStorage.removeItem('saved_msgs');
+if (WAPI.isLoggedIn()) {
+	window.Store.Msg.off('add');
+	sessionStorage.removeItem('saved_msgs');
+	window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
+		if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
+			let message = window.WAPI.processMessageObj(newMessage, false, false);
+			if (message) {
+				window.WAPI._newMessagesQueue.push(message);
+				window.WAPI._newMessagesBuffer.push(message);
+			}
 
-window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
-    if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
-        let message = window.WAPI.processMessageObj(newMessage, false, false);
-        if (message) {
-            window.WAPI._newMessagesQueue.push(message);
-            window.WAPI._newMessagesBuffer.push(message);
-        }
+			// Starts debouncer time to don't call a callback for each message if more than one message arrives
+			// in the same second
+			if (!window.WAPI._newMessagesDebouncer && window.WAPI._newMessagesQueue.length > 0) {
+				window.WAPI._newMessagesDebouncer = setTimeout(() => {
+					let queuedMessages = window.WAPI._newMessagesQueue;
 
-        // Starts debouncer time to don't call a callback for each message if more than one message arrives
-        // in the same second
-        if (!window.WAPI._newMessagesDebouncer && window.WAPI._newMessagesQueue.length > 0) {
-            window.WAPI._newMessagesDebouncer = setTimeout(() => {
-                let queuedMessages = window.WAPI._newMessagesQueue;
+					window.WAPI._newMessagesDebouncer = null;
+					window.WAPI._newMessagesQueue     = [];
 
-                window.WAPI._newMessagesDebouncer = null;
-                window.WAPI._newMessagesQueue     = [];
+					let removeCallbacks = [];
 
-                let removeCallbacks = [];
+					window.WAPI._newMessagesCallbacks.forEach(function (callbackObj) {
+						if (callbackObj.callback !== undefined) {
+							callbackObj.callback(queuedMessages);
+						}
+						if (callbackObj.rmAfterUse === true) {
+							removeCallbacks.push(callbackObj);
+						}
+					});
 
-                window.WAPI._newMessagesCallbacks.forEach(function (callbackObj) {
-                    if (callbackObj.callback !== undefined) {
-                        callbackObj.callback(queuedMessages);
-                    }
-                    if (callbackObj.rmAfterUse === true) {
-                        removeCallbacks.push(callbackObj);
-                    }
-                });
-
-                // Remove removable callbacks.
-                removeCallbacks.forEach(function (rmCallbackObj) {
-                    let callbackIndex = window.WAPI._newMessagesCallbacks.indexOf(rmCallbackObj);
-                    window.WAPI._newMessagesCallbacks.splice(callbackIndex, 1);
-                });
-            }, 1000);
-        }
-    }
-});
+					// Remove removable callbacks.
+					removeCallbacks.forEach(function (rmCallbackObj) {
+						let callbackIndex = window.WAPI._newMessagesCallbacks.indexOf(rmCallbackObj);
+						window.WAPI._newMessagesCallbacks.splice(callbackIndex, 1);
+					});
+				}, 1000);
+			}
+		}
+	});	
+}
 
 window.WAPI._unloadInform = (event) => {
     // Save in the buffer the ungot unreaded messages
